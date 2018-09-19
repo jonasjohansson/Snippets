@@ -1,0 +1,34 @@
+#include <Wire.h>
+
+char data[100];
+int index = 0;
+String output = "";
+
+void setup() {
+  Wire.begin(8);                // join i2c bus with address #8
+  Wire.onReceive(receiveEvent); // register event
+  Serial.begin(9600);           // start serial for output
+  
+}
+
+void loop() {
+  delay(100);
+}
+
+
+void receiveEvent(int howMany) {
+  while(Wire.available()){
+    Wire.readBytes(data, howMany);
+    for (int j = 0; j < howMany; j++){
+    
+      if (data[j] == '*'){
+        Serial.println("HEY!");
+        Serial.println(output);
+        output = "";
+        break;
+      } else {
+        output += data[j];
+      }
+    }
+  }
+}

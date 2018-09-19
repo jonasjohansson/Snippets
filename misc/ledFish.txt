@@ -1,0 +1,58 @@
+#include <Adafruit_NeoPixel.h>
+
+#define PIN 6
+#define NUMPIXELS 24 // 150
+#define WAVESIZE 10
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+float maxBrightness = 192;
+float minBrightness = 48;
+float speedFactor = 0.01; // higher = faster
+float stepDelay = 5;
+
+unsigned long currentTime;
+unsigned long previousTime;
+
+int pixel = 0;
+int red = 255; // 0
+int green = 55; // 128
+int blue = 24; // 196
+int interval = 5;
+int wait = 0;
+int wave[WAVESIZE] = {244,224,196,172,155,124,96,72,40,24};
+
+void setup() {
+  Serial.begin(9600);
+  strip.begin();
+}
+
+void loop() {
+  for (int i = 0; i < 65535; i++) {
+    // breathing effect
+    float intensity = (maxBrightness - minBrightness) / 2.0 * (1.0 + sin(speedFactor * i)) + minBrightness;
+    strip.setBrightness(intensity);
+    strip.show();
+    delay(stepDelay);
+    // main
+    for (int j = 0; j < NUMPIXELS; j++){
+      strip.setPixelColor(j, red, green, blue);
+    }
+    // wave
+    /*currentTime = millis();
+    if (currentTime - previousTime > interval + wait){
+      previousTime = currentTime;
+      for (int j = 0; j < WAVESIZE; j++){
+        strip.setPixelColor(pixel-j, wave[j], 0, blue);
+      }
+      strip.show();
+      if (pixel < NUMPIXELS){
+        pixel++;
+        wait = 0;
+      } else {
+        pixel = 0;
+        wait = 4000;
+      }
+    }*/
+  }
+}

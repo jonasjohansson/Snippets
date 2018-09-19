@@ -1,0 +1,58 @@
+#include <Adafruit_NeoPixel.h>
+#include <EEPROM.h>
+
+#define PIN 0
+#define NUM_LEDS 8
+#define BRIGHTNESS 8
+#define ADDR 0
+
+float maxBrightness = 64;
+float minBrightness = 16;
+float speedFactor = 0.0005;
+
+boolean first = true;
+
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LEDS, PIN, NEO_GRBW + NEO_KHZ800);
+
+void setup() {
+  strip.begin();
+  strip.setBrightness(BRIGHTNESS);
+}
+
+void loop(){
+  if (first){
+    first = false;
+    int mode = EEPROM.read(ADDR);
+    for (uint16_t i = 0; i < NUM_LEDS; i++) {
+      switch (mode){
+        // white
+        case 0:
+          strip.setPixelColor(i,0,0,0,64);
+        break;
+        // magenta
+        case 1:
+          strip.setPixelColor(i,128,0,255,0);
+        break;
+        // pink
+        case 2:
+          strip.setPixelColor(i,224,28,128,0);
+        break;
+        // turquoise
+        case 3:
+          strip.setPixelColor(i,0,48,224,0);
+        break;
+        // jade
+        case 4:
+          strip.setPixelColor(i,0,224,48,0);
+        break;
+        // gold
+        case 5:
+          strip.setPixelColor(i,224,128,0,0);
+        break;
+      }
+    }
+    mode = (mode == 5) ? 0 : mode + 1;
+    EEPROM.write(ADDR, mode);
+    strip.show();
+  }
+}

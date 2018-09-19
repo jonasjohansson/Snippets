@@ -1,0 +1,80 @@
+int ledPin = 9;
+
+// sensor
+int sensorPin = 0;
+int sensorValue;
+int sensorValueMapped;
+int fromLow = 150;
+int fromHigh = 600;
+int toLow = 255;
+int toHigh = 0;
+int threshold = 12;
+
+// smoothing
+const int numReadings = 10;
+int readings[numReadings];
+int readIndex = 0;
+int total = 0;
+int average = 0;
+
+void setup() {
+  Serial.begin(9600);
+  // LED
+  pinMode(ledPin, OUTPUT);
+  // on board led
+  pinMode(13, OUTPUT);
+  // switch
+  digitalWrite(2, HIGH);
+  digitalWrite(4, LOW);
+  // 1 goes to 2
+  pinMode(2, OUTPUT);
+  // 2 goes to 3
+  pinMode(3, INPUT);
+  // 3 goes to 4
+  pinMode(4, OUTPUT);
+  // init smoothing
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+    readings[thisReading] = 0;
+  }
+}
+
+void loop() {
+  // smoothing
+  total = total - readings[readIndex];
+  readings[readIndex] = analogRead(sensorPin);
+  total = total + readings[readIndex];
+  readIndex = readIndex + 1;
+  if (readIndex >= numReadings) {
+    readIndex = 0;
+  }
+  average = total / numReadings;
+  
+  // sensor values
+  int sensorValue = analogRead(0);
+  int switchValue = digitalRead(3);
+
+  // map values
+  int mapped = map(average,150,600,255,0);
+  if (mapped > 255){
+    mapped = 255;
+  } else if (mapped < 0) {
+     mapped = 0;
+  }
+  
+  if (mapped > threshold){
+    analogWrite(ledPin, mapped);
+  }
+  
+  Serial.println("a0 "+String(mapped));
+  Serial.println("a1 "+String(switchValue));
+  
+  // toggle board led with switch
+  if (switchValue == 0){
+    digitalWrite(13, LOW);
+  } else {
+    digitalWrite(13, HIGH);
+  }
+
+  // stability
+  delay(1);
+}

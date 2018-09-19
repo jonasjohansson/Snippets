@@ -1,0 +1,62 @@
+//import netP5.*;
+//import oscP5.*;
+//import themidibus.*;
+import processing.serial.*;
+
+//NetAddress OscAddress;
+
+Serial myPort;
+//MidiBus myBus;
+//OscP5 oscP5;
+
+int value = 0;
+
+int numReadings = 10;
+int[] readings = new int[numReadings];
+int readIndex = 0;
+int total = 0;
+int average = 0;
+
+void setup() {
+  size(200, 200);
+  //MidiBus.list();
+  printArray(Serial.list());
+  String portName = Serial.list()[3];
+  myPort = new Serial(this, portName, 9600);
+  myPort.bufferUntil(10); 
+  //oscP5 = new OscP5(this, 7000);
+  //myBus = new MidiBus(this, "Processing", "Processing");
+  //OscAddress = new NetAddress("127.0.0.1", 7000);
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+    readings[thisReading] = 0;
+  }
+}
+
+void draw() {
+  background(0);
+  total = total - readings[readIndex];
+  readings[readIndex] = value;
+  total = total + readings[readIndex];
+  readIndex = readIndex + 1;
+  if (readIndex >= numReadings) {
+    readIndex = 0;
+  }
+  average = total / numReadings;
+  value = constrain(average, 0, 500);
+  float mapped = map(value, 0, 500, 0, 127);
+  //myBus.sendControllerChange(0, 1, (int)mapped);
+  //OscMessage message = new OscMessage("/composition/opacityandvolume");
+  //message.add(value);
+  //oscP5.send(message, OscAddress);
+  noStroke();
+  fill(255);
+  rect(0,height,width,-value);
+}
+
+void serialEvent (Serial myPort) {
+  String myString = myPort.readString();
+  if (myString != null) {
+    myString = trim(myString);
+    value = int(myString);
+  }
+}

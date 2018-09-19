@@ -1,0 +1,84 @@
+const uint8_t gamma[] = {0, 4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 148, 152, 156, 160, 164, 168, 172, 176, 180, 184, 188, 192, 196, 200, 204, 208, 212, 216, 220, 224, 228, 232, 236, 240, 244, 248, 255};
+
+unsigned long currentMillis;
+
+long detectedMillis;
+long timeSinceDetection;
+long interval           = 10000;
+
+const int ledPin        = 9;
+const int inputPin      = A0;
+const int minGammaStep  = 0;
+const int maxGammaStep  = 44;
+const int fadeWait      = 30;
+const int numReadings   = 10;
+
+int readings[numReadings];
+int readIndex           = 0;
+int total               = 0;
+int average             = 0;
+
+int distance;
+int minDistance         = 90;
+
+bool minDistanceSet     = false;
+bool lightOn            = false;
+bool debug              = true;
+
+void setup() {
+  if (debug)
+    Serial.begin(9600);
+  pinMode(ledPin, OUTPUT);
+  for (int thisReading = 0; thisReading < numReadings; thisReading++) {
+    readings[thisReading] = 0;
+  }
+}
+
+void loop() {
+  // raw
+  distance = analogRead(inputPin);
+
+  total = total - readings[readIndex];
+  readings[readIndex] = distance;
+  total = total + readings[readIndex];
+  readIndex = readIndex + 1;
+
+  if (readIndex >= numReadings) {
+    readIndex = 0;
+  }
+
+  // smoothed
+  distance = total / numReadings;
+
+  if (debug)
+    Serial.println("Distance to ojbect: "+String(distance));
+
+  currentMillis = millis();
+  
+  if (distance > minDistance) {
+    detectedMillis = millis();
+    if (!lightOn) {
+      if (debug)
+        Serial.println("Turning LED on!");
+        Serial.println("Distance to ojbect: "+String(distance));
+      for (int i = minGammaStep; i < maxGammaStep; i++) {
+        analogWrite(ledPin, gamma[i]);
+        delay(fadeWait);
+      }
+      lightOn = true;
+    }
+  }
+  timeSinceDetection = currentMillis - detectedMillis;
+  
+  if (timeSinceDetection > interval && lightOn) {
+    if (debug)
+      Serial.println("Turning LED off!");
+    for (int i = minGammaStep; i < maxGammaStep; i++) {
+      analogWrite(ledPin, gamma[maxGammaStep - 1 - i]);
+      delay(fadeWait);
+    }
+    lightOn = false;
+  }
+
+  delay(1);
+}
